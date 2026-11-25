@@ -1,9 +1,33 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define INPUT "5 8 12 1 1 22"
+#define INPUT "* 7 3"
+
+static int square(int base, int exponent) {
+    for (int i = 0; i < exponent; i++) base *= base;
+    return base;
+}
+
+static int arithmetic(char op, int res, int atom) {
+    switch (op) {
+            case '+': return res + atom;
+            case '-': return res - atom;
+            case '*': return res * atom;
+                //case '^': return square(res,atom);
+            case '/': {
+                if (atom != 0) return res / atom;
+
+                fprintf(stderr, "Division by zero error.\n");
+                exit(44); 
+            }
+            default: {
+                fprintf(stderr, "Unknown Operator.\n");
+                exit(22); 
+            }
+    }
+}
 
 static char next_char(const char *input, size_t *ptr) {
     return input[(*ptr)++];
@@ -32,25 +56,39 @@ int parse_int(const char *input, size_t *start) {
 
     *start = ptr;
 
+    printf("parsed %d\n", output);
     return output;
 }
 
 int eval_input(const char *input) {
     size_t ptr = 0;
     size_t input_len = strlen(input);
+    char op = input[ptr++];
 
-    int sum = 0;
-
+    skip_whitespace(input, &ptr);
+    char c = input[ptr];
+    int result;
+    if (is_digit(c)) {
+        int c_int = parse_int(input, &ptr);
+        if (op == '-') result = -c_int;
+        else result = c_int;
+    } else return 0;
+    
+    
     while (ptr < input_len) {
         skip_whitespace(input, &ptr);
-        if (is_digit(input[ptr])) {
-            sum += parse_int(input, &ptr);
-        } else {
+        c = input[ptr];
+        if (is_digit(c)) {
+            int c_int = parse_int(input, &ptr);
+            result = arithmetic(op, result, c_int);
+        } else if (c == '\0') break;
+        else {
+            printf("reached non-digit atom %c\n", c);
             return -1;
         }
     }
 
-    printf("sum is %d\n", sum);
+    printf("(%c) result is %d\n", op, result);
 
     return 0;
 }
