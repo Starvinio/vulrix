@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT "* 7 3"
+#define INPUT "^ 12 2"
 
 static int square(int base, int exponent) {
-    for (int i = 0; i < exponent; i++) base *= base;
-    return base;
+    int result = base;
+    for (int i = 0; i < exponent-1; i++) result *= base;
+    return result;
 }
 
 static int arithmetic(char op, int res, int atom) {
@@ -15,7 +16,7 @@ static int arithmetic(char op, int res, int atom) {
             case '+': return res + atom;
             case '-': return res - atom;
             case '*': return res * atom;
-                //case '^': return square(res,atom);
+            case '^': return square(res,atom);
             case '/': {
                 if (atom != 0) return res / atom;
 
@@ -70,9 +71,15 @@ int eval_input(const char *input) {
     int result;
     if (is_digit(c)) {
         int c_int = parse_int(input, &ptr);
-        if (op == '-') result = -c_int;
+
+        // if minus, we want to start negative
+        // [allows direct negation]
+        if (op == '-') result = -c_int; 
         else result = c_int;
-    } else return 0;
+
+    } else {
+        return 0;
+    }
     
     
     while (ptr < input_len) {
