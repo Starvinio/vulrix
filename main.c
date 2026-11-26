@@ -3,15 +3,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT "^ 12 2"
+#define INPUT "+ 1 3"
 
-static int square(int base, int exponent) {
-    int result = base;
+// TODO: Allow for non-int exponents
+
+static double square(double base, double exponent_d) {
+    double result = base;
+    int exponent = (int)exponent_d;
     for (int i = 0; i < exponent-1; i++) result *= base;
     return result;
 }
 
-static int arithmetic(char op, int res, int atom) {
+static double arithmetic(char op, double res, double atom) {
     switch (op) {
             case '+': return res + atom;
             case '-': return res - atom;
@@ -30,10 +33,6 @@ static int arithmetic(char op, int res, int atom) {
     }
 }
 
-static char next_char(const char *input, size_t *ptr) {
-    return input[(*ptr)++];
-}
-
 void skip_whitespace(const char *input, size_t *ptr) {
     while (input[*ptr] == ' ') (*ptr)++; 
 }
@@ -42,22 +41,36 @@ int is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
-int c_to_int(char c) {
-    return c - '0';
+double c_to_double(char c) {
+    return (double)(c - '0');
 }
 
-int parse_int(const char *input, size_t *start) {
+double parse_num(const char *input, size_t *start) {
     size_t ptr = *start + 1; // we already know first char is digit
-    int output = c_to_int(input[*start]);
+    double output = c_to_double(input[*start]);
 
     while (is_digit(input[ptr])) {
-        output *= 10;
-        output += c_to_int(input[ptr++]);
+        output = output * 10.0 + c_to_double(input[ptr++]);
     };
 
-    *start = ptr;
+    if (input[ptr] != '.') {
+        *start = ptr;
+        printf("parsed %f (no floating point)\n", output);
+        return output;
+    }
 
-    printf("parsed %d\n", output);
+    ptr++;
+
+    double factor = 0.1;
+    while (is_digit(input[ptr])) {
+        double d = c_to_double(input[ptr++]);
+        output += (d * factor); 
+        factor *= 0.1;
+    };
+
+    printf("parsed %f (no floating point)\n", output);
+
+    *start = ptr;
     return output;
 }
 
@@ -68,9 +81,9 @@ int eval_input(const char *input) {
 
     skip_whitespace(input, &ptr);
     char c = input[ptr];
-    int result;
+    double result;
     if (is_digit(c)) {
-        int c_int = parse_int(input, &ptr);
+        double c_int = parse_num(input, &ptr);
 
         // if minus, we want to start negative
         // [allows direct negation]
@@ -86,7 +99,7 @@ int eval_input(const char *input) {
         skip_whitespace(input, &ptr);
         c = input[ptr];
         if (is_digit(c)) {
-            int c_int = parse_int(input, &ptr);
+            double c_int = parse_num(input, &ptr);
             result = arithmetic(op, result, c_int);
         } else if (c == '\0') break;
         else {
@@ -95,7 +108,7 @@ int eval_input(const char *input) {
         }
     }
 
-    printf("(%c) result is %d\n", op, result);
+    printf("(%c) result is %f\n", op, result);
 
     return 0;
 }
