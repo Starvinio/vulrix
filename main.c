@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT "+ 1 3"
+#define INPUT "^ 0.33333333333 10 "
 
 // TODO: Allow for non-int exponents
-
 static double square(double base, double exponent_d) {
     double result = base;
     int exponent = (int)exponent_d;
@@ -34,7 +33,7 @@ static double arithmetic(char op, double res, double atom) {
 }
 
 void skip_whitespace(const char *input, size_t *ptr) {
-    while (input[*ptr] == ' ') (*ptr)++; 
+    while (input[*ptr] == ' ' || input[*ptr] == '\n') (*ptr)++; 
 }
 
 int is_digit(char c) {
@@ -68,7 +67,7 @@ double parse_num(const char *input, size_t *start) {
         factor *= 0.1;
     };
 
-    printf("parsed %f (no floating point)\n", output);
+    printf("parsed %f (floating point)\n", output);
 
     *start = ptr;
     return output;
