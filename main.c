@@ -5,6 +5,62 @@
 
 #define INPUT "^ 0.33333333333 10 "
 
+#define BLOCK_START_CAPACITY 256
+
+#define GROW_CAPACITY(capacity) \
+  ((capacity) < 8 ? 8 : (capacity) * 2)
+
+#define GROW_ARRAY(type, pointer, old_count, new_count) \
+  (type*)reallocate(pointer, (sizeof(type) * old_count), \
+             (sizeof(type) * new_count))
+
+void* reallocate(void *pointer, size_t old_size, size_t new_size);
+
+typedef enum {
+    OPEN,
+  	CLOSE,
+  	NUM,
+} OpCode;
+
+typedef struct {
+    size_t length;
+  	size_t capacity;
+  	uint8_t *data;
+} Block;
+
+// initialize directly with starting capacity
+static void init_block(Block *b) {
+	b->length = 0; 
+	b->capacity = BLOCK_START_CAPACITY;
+    b->data = malloc(sizeof(uint8_t) * BLOCK_START_CAPACITY);
+    return;
+}
+
+/* Function used for nearly all memory management of the buffers */
+void* reallocate(void *pointer, size_t old_size, size_t new_size) {
+    if (new_size == 0) {
+        free(pointer);
+        return NULL;
+    }
+
+    void* result = realloc(pointer, new_size);
+    if (result == NULL) exit(1); // not enough memory safeguard
+    return result;
+}
+
+static void append(Block *b, uint8_t byte) {
+    if (b->length + 1 > b->capacity) {
+        size_t old_capacity = b->capacity;
+        b->capacity = GROW_CAPACITY(b->capacity);
+
+        b->data = GROW_ARRAY(uint8_t, b->data, old_capacity, b->capacity);
+    }
+
+    b->data[b->length++] = byte;
+    return;
+}
+
+
 // TODO: Allow for non-int exponents
 static double square(double base, double exponent_d) {
     double result = base;
